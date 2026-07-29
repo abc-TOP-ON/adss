@@ -179,18 +179,15 @@ local Theme = {
 }
 
 local is_mobile = user_input_service.TouchEnabled
-local MAIN_SIZE = is_mobile and UDim2.new(0, 420, 0, 250) or UDim2.new(0, 600, 0, 350)
-local SHADOW_SIZE = is_mobile and UDim2.new(0, 354, 0, 249) or UDim2.new(0, 504, 0, 349)
-local SUCCESS_SIZE = is_mobile and UDim2.new(0, 360, 0, 260) or UDim2.new(0, 520, 0, 360)
+local MAIN_SIZE = is_mobile and UDim2.new(0, 420, 0, 200) or UDim2.new(0, 600, 0, 280)
+local SHADOW_SIZE = is_mobile and UDim2.new(0, 354, 0, 199) or UDim2.new(0, 504, 0, 279)
+local SUCCESS_SIZE = is_mobile and UDim2.new(0, 360, 0, 200) or UDim2.new(0, 520, 0, 280)
 local SIDEBAR_WIDTH = is_mobile and 110 or 160
 local padding = is_mobile and 15 or 30
 local btn_height = is_mobile and 28 or 38
 
 local y_username = is_mobile and 65 or 110
-local y_key = is_mobile and 100 or 158
-local y_login = is_mobile and 135 or 205
-local y_getkey = is_mobile and 170 or 253
-local y_buy = is_mobile and 205 or 299
+local y_login = is_mobile and 110 or 170
 
 -- ====== NOTIFICATION SYSTEM ======
 local function show_notification(title_text, message_text, display_duration)
@@ -528,7 +525,6 @@ local function create_button(text, y_pos, is_primary)
         ClipsDescendants = true
     }, {
         create_instance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-        not is_primary and create_instance("UIStroke", {Color = Theme.ElementBorder, Thickness = 1, Transparency = 1}) or nil
     })
 
     local underline = create_instance("Frame", {
@@ -542,22 +538,12 @@ local function create_button(text, y_pos, is_primary)
     })
 
     btn.MouseEnter:Connect(function()
-        if is_primary then
-            create_smooth_tween(btn, {BackgroundTransparency = 0.15}, 0.2)
-        else
-            local s = btn:FindFirstChild("UIStroke")
-            if s then create_smooth_tween(s, {Color = Color3.fromRGB(90, 90, 90)}, 0.25) end
-        end
+        create_smooth_tween(btn, {BackgroundTransparency = 0.15}, 0.2)
         create_smooth_tween(underline, {Size = UDim2.new(1, 0, 0, 2)}, 0.3)
     end)
 
     btn.MouseLeave:Connect(function()
-        if is_primary then
-            create_smooth_tween(btn, {BackgroundTransparency = 0}, 0.25)
-        else
-            local s = btn:FindFirstChild("UIStroke")
-            if s then create_smooth_tween(s, {Color = Theme.ElementBorder}, 0.3) end
-        end
+        create_smooth_tween(btn, {BackgroundTransparency = 0}, 0.25)
         create_smooth_tween(underline, {Size = UDim2.new(0, 0, 0, 2)}, 0.25)
     end)
 
@@ -565,18 +551,6 @@ local function create_button(text, y_pos, is_primary)
 end
 
 local login_btn = create_button("Load Script", y_login, true)
-local get_key_btn = create_button("Get your free key", y_getkey, false)
-local buy_btn = create_button("Buy Premium", y_buy, false)
-
-task.spawn(function()
-    while buy_btn and buy_btn.Parent do
-        create_smooth_tween(buy_btn, {BackgroundColor3 = Color3.fromRGB(180, 30, 45), BackgroundTransparency = 0}, 1.5)
-        task.wait(1.5)
-        if not buy_btn or not buy_btn.Parent then break end
-        create_smooth_tween(buy_btn, {BackgroundColor3 = Color3.fromRGB(60, 5, 12), BackgroundTransparency = 0}, 1.5)
-        task.wait(1.5)
-    end
-end)
 
 local scan_bar = create_instance("Frame", {
     Name = "ScanBar",
@@ -627,45 +601,7 @@ end
 
 discord_btn.MouseButton1Click:Connect(open_discord)
 
-local function open_url(url)
-    if setclipboard then
-        setclipboard(url)
-    end
-
-    local success = false
-
-    if type(openBrowser) == "function" then
-        pcall(function() openBrowser(url); success = true end)
-    elseif type(open_browser) == "function" then
-        pcall(function() open_browser(url); success = true end)
-    end
-
-    if not success then
-        pcall(function()
-            game:GetService("GuiService"):OpenBrowserWindow(url)
-            success = true
-        end)
-    end
-
-    if not success and type(os) == "table" and type(os.execute) == "function" then
-        pcall(function()
-            os.execute('start "" "' .. url .. '"')
-            success = true
-        end)
-    end
-end
-
-buy_btn.MouseButton1Click:Connect(function()
-    open_url("https://phantomarket.org")
-    show_notification("Premium Shop", "Shop link copied. Paste in your browser", 5)
-end)
-
-get_key_btn.MouseButton1Click:Connect(function()
-    open_url("https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
-    show_notification("Get Key", "Key link copied. Paste in your browser", 5)
-end)
-
--- ====== LOAD SCRIPT FUNCTION (No Key Required) ======
+-- ====== LOAD SCRIPT FUNCTION (No Key) ======
 local function load_script_direct()
     login_btn.Text = "Loading..."
 
@@ -690,7 +626,6 @@ local function load_script_direct()
     end)
 
     task.spawn(function()
-        -- Load the script directly
         local success = load_script()
         scan_active = false
 
@@ -832,7 +767,7 @@ task.spawn(function()
 
     task.wait(0.18)
 
-    -- Typewriter effects
+    -- Typewriter
     local function typewriter(label, full_text, base_delay)
         local d = base_delay or 0.035
         for i = 1, #full_text do
@@ -865,21 +800,9 @@ task.spawn(function()
 
     create_smooth_tween(login_btn, {BackgroundTransparency = 0, TextTransparency = 0}, 0.35)
 
-    task.wait(0.1)
-
-    create_smooth_tween(get_key_btn, {BackgroundTransparency = 1, TextTransparency = 0}, 0.35)
-    local getkey_stroke = get_key_btn:FindFirstChild("UIStroke")
-    if getkey_stroke then create_smooth_tween(getkey_stroke, {Transparency = 0}, 0.35) end
-
-    task.wait(0.1)
-
-    create_smooth_tween(buy_btn, {TextTransparency = 0}, 0.35)
-    local buy_stroke = buy_btn:FindFirstChild("UIStroke")
-    if buy_stroke then create_smooth_tween(buy_stroke, {Transparency = 0}, 0.35) end
-
     task.wait(0.3)
 
-    -- Avatar glow animation
+    -- Avatar glow
     task.spawn(function()
         local av = avatar_container:FindFirstChild("Avatar")
         if not av then return end
@@ -894,7 +817,7 @@ task.spawn(function()
         end
     end)
 
-    -- Border glow animation
+    -- Border glow
     task.spawn(function()
         while main_frame and main_frame.Parent do
             local ms = main_frame:FindFirstChild("UIStroke")
